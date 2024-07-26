@@ -223,8 +223,8 @@ export function SideBar(props: { className?: string }) {
       {...props}
     >
       <SideBarHeader
-        title="NextChat"
-        subTitle="Build your own AI assistant."
+        title="Giaogiao GPT"
+        subTitle="猛男Giaogiao GPT, 你的AI奶妈."
         logo={<ChatGptIcon />}
       >
         <div className={styles["sidebar-header-bar"]}>
@@ -241,35 +241,7 @@ export function SideBar(props: { className?: string }) {
             }}
             shadow
           />
-          <IconButton
-            icon={<DiscoveryIcon />}
-            text={shouldNarrow ? undefined : Locale.Discovery.Name}
-            className={styles["sidebar-bar-button"]}
-            onClick={() => setShowPluginSelector(true)}
-            shadow
-          />
         </div>
-        {showPluginSelector && (
-          <Selector
-            items={[
-              {
-                title: "👇 Please select the plugin you need to use",
-                value: "-",
-                disable: true,
-              },
-              ...PLUGINS.map((item) => {
-                return {
-                  title: item.name,
-                  value: item.path,
-                };
-              }),
-            ]}
-            onClose={() => setShowPluginSelector(false)}
-            onSelection={(s) => {
-              navigate(s[0], { state: { fromHome: true } });
-            }}
-          />
-        )}
       </SideBarHeader>
       <SideBarBody
         onClick={(e) => {
@@ -297,11 +269,6 @@ export function SideBar(props: { className?: string }) {
               <Link to={Path.Settings}>
                 <IconButton icon={<SettingsIcon />} shadow />
               </Link>
-            </div>
-            <div className={styles["sidebar-action"]}>
-              <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-                <IconButton icon={<GithubIcon />} shadow />
-              </a>
             </div>
           </>
         }
