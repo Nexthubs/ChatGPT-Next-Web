@@ -246,11 +246,6 @@ export function SideBar(props: { className?: string }) {
         {showPluginSelector && (
           <Selector
             items={[
-              {
-                title: "👇 Please select the plugin you need to use",
-                value: "-",
-                disable: true,
-              },
               ...PLUGINS.map((item) => {
                 return {
                   title: item.name,
