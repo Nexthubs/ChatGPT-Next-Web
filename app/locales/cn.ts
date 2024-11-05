@@ -8,9 +8,9 @@ const cn = {
   WIP: "该功能仍在开发中……",
   Error: {
     Unauthorized: isApp
-      ? `😆 无法开始使用，不用慌:
+      ? ` 无法开始使用，不用慌:
        \\ [点击这里立刻开启对话 🚀](${SAAS_CHAT_UTM_URL})
-      : `😆 无法开始使用，不用慌:
+      : ` 无法开始使用，不用慌:
        \ [点击这里立刻开启对话 🚀](${SAAS_CHAT_UTM_URL})
        `,
   },
