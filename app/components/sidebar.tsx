@@ -256,7 +256,6 @@ export function SideBar(props: { className?: string }) {
         shouldNarrow={shouldNarrow}
       >
 
-        </div>
         {showDiscoverySelector && (
           <Selector
             items={[
