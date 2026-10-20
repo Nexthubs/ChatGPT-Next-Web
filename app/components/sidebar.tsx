@@ -5,7 +5,7 @@ import styles from "./home.module.scss";
 import { IconButton } from "./button";
 import SettingsIcon from "../icons/settings.svg";
 import GithubIcon from "../icons/github.svg";
-import ChatGptIcon from "../icons/chatgpt.svg";
+import NextChatIcon from "../icons/logo.svg";
 import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
 import MaskIcon from "../icons/mask.svg";
@@ -252,7 +252,7 @@ export function SideBar(props: { className?: string }) {
       <SideBarHeader
         title="友AI GPT"
         subTitle="你的AI智能助手."
-        logo={<ChatGptIcon />}
+        logo={<NextChatIcon />}
         shouldNarrow={shouldNarrow}
       >
 
