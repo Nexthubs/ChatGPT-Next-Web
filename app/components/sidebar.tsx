@@ -5,7 +5,7 @@ import styles from "./home.module.scss";
 import { IconButton } from "./button";
 import SettingsIcon from "../icons/settings.svg";
 import GithubIcon from "../icons/github.svg";
-import ChatGptIcon from "../icons/chatgpt.svg";
+import NextChatIcon from "../icons/logo.svg";
 import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
 import MaskIcon from "../icons/mask.svg";
@@ -250,26 +250,12 @@ export function SideBar(props: { className?: string }) {
       {...props}
     >
       <SideBarHeader
-        title="NextChat"
-        subTitle="Build your own AI assistant."
-        logo={<ChatGptIcon />}
+        title="友AI GPT"
+        subTitle="你的AI智能助手."
+        logo={<NextChatIcon />}
         shouldNarrow={shouldNarrow}
       >
-        <div className={styles["sidebar-header-bar"]}>
-          <IconButton
-            icon={<MaskIcon />}
-            text={shouldNarrow ? undefined : Locale.Mask.Name}
-            className={styles["sidebar-bar-button"]}
-            onClick={() => {
-              if (config.dontShowMaskSplashScreen !== true) {
-                navigate(Path.NewChat, { state: { fromHome: true } });
-              } else {
-                navigate(Path.Masks, { state: { fromHome: true } });
-              }
-            }}
-            shadow
-          />
-        </div>
+
         {showDiscoverySelector && (
           <Selector
             items={[

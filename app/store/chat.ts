@@ -1,5 +1,6 @@
 import {
   getMessageTextContent,
+  getMessageTextContentWithoutThinking,
   isDalle3,
   safeLocalStorage,
   trimTopic,
@@ -401,7 +402,7 @@ export const useChatStore = createPersistStore(
 
         get().checkMcpJson(message);
 
-        get().summarizeSession(false, targetSession);
+        get().summarizeSession(targetSession);
       },
 
       async onUserInput(
@@ -454,6 +455,17 @@ export const useChatStore = createPersistStore(
             savedUserMessage,
             botMessage,
           ]);
+
+          if (
+            !isMcpResponse &&
+            !useAppConfig.getState().enableAutoGenerateTitle &&
+            session.topic === DEFAULT_TOPIC
+          ) {
+            const title = content.trim().replace(/\s+/g, " ");
+            if (title) {
+              session.topic = trimTopic(title).slice(0, 30);
+            }
+          }
         });
 
         const api: ClientApi = getClientApi(modelConfig.providerName);
@@ -625,8 +637,15 @@ export const useChatStore = createPersistStore(
         ) {
           const msg = messages[i];
           if (!msg || msg.isError) continue;
-          tokenCount += estimateTokenLength(getMessageTextContent(msg));
-          reversedRecentMessages.push(msg);
+          const normalized =
+            msg.role === "assistant" && typeof msg.content === "string"
+              ? {
+                  ...msg,
+                  content: getMessageTextContentWithoutThinking(msg),
+                }
+              : msg;
+          tokenCount += estimateTokenLength(getMessageTextContent(normalized));
+          reversedRecentMessages.push(normalized);
         }
         // concat all messages
         const recentMessages = [
@@ -658,10 +677,7 @@ export const useChatStore = createPersistStore(
         });
       },
 
-      summarizeSession(
-        refreshTitle: boolean = false,
-        targetSession: ChatSession,
-      ) {
+      summarizeSession(targetSession: ChatSession) {
         const config = useAppConfig.getState();
         const session = targetSession;
         const modelConfig = session.mask.modelConfig;
@@ -685,26 +701,30 @@ export const useChatStore = createPersistStore(
         // should summarize topic after chating more than 50 words
         const SUMMARIZE_MIN_LEN = 50;
         if (
-          (config.enableAutoGenerateTitle &&
-            session.topic === DEFAULT_TOPIC &&
-            countMessages(messages) >= SUMMARIZE_MIN_LEN) ||
-          refreshTitle
+          config.enableAutoGenerateTitle &&
+          session.topic === DEFAULT_TOPIC &&
+          countMessages(messages) >= SUMMARIZE_MIN_LEN
         ) {
-          const startIndex = Math.max(
-            0,
-            messages.length - modelConfig.historyMessageCount,
+          const firstUserMessage = messages.find(
+            (message) => message.role === "user" && !message.isError,
           );
-          const topicMessages = messages
-            .slice(
-              startIndex < messages.length ? startIndex : messages.length - 1,
-              messages.length,
-            )
-            .concat(
-              createMessage({
-                role: "user",
-                content: Locale.Store.Prompt.Topic,
-              }),
-            );
+          const topicMessages = [
+            ...(firstUserMessage
+              ? [
+                  {
+                    ...firstUserMessage,
+                    content: getMessageTextContent(firstUserMessage).slice(
+                      0,
+                      500,
+                    ),
+                  },
+                ]
+              : []),
+            createMessage({
+              role: "user",
+              content: Locale.Store.Prompt.Topic,
+            }),
+          ];
           api.llm.chat({
             messages: topicMessages,
             config: {
@@ -730,7 +750,15 @@ export const useChatStore = createPersistStore(
         );
         let toBeSummarizedMsgs = messages
           .filter((msg) => !msg.isError)
-          .slice(summarizeIndex);
+          .slice(summarizeIndex)
+          .map((msg) =>
+            msg.role === "assistant" && typeof msg.content === "string"
+              ? {
+                  ...msg,
+                  content: getMessageTextContentWithoutThinking(msg),
+                }
+              : msg,
+          );
 
         const historyMsgLength = countMessages(toBeSummarizedMsgs);
 
@@ -778,14 +806,18 @@ export const useChatStore = createPersistStore(
               providerName,
             },
             onUpdate(message) {
-              session.memoryPrompt = message;
+              session.memoryPrompt = getMessageTextContentWithoutThinking(
+                createMessage({ role: "assistant", content: message }),
+              );
             },
             onFinish(message, responseRes) {
               if (responseRes?.status === 200) {
                 console.log("[Memory] ", message);
                 get().updateTargetSession(session, (session) => {
                   session.lastSummarizeIndex = lastSummarizeIndex;
-                  session.memoryPrompt = message; // Update the memory prompt for stored it in local storage
+                  session.memoryPrompt = getMessageTextContentWithoutThinking(
+                    createMessage({ role: "assistant", content: message }),
+                  );
                 });
               }
             },
