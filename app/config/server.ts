@@ -10,6 +10,10 @@ declare global {
       OPENAI_API_KEY?: string;
       CODE?: string;
 
+      // external WordPress login check
+      AUTH_CHECK_URL?: string;
+      AUTH_REDIRECT_URL?: string;
+
       BASE_URL?: string;
       OPENAI_ORG_ID?: string; // openai only
 
