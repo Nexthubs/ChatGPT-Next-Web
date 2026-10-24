@@ -1,3 +1,4 @@
+import { withExternalAuth } from "@/app/utils/external-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { STORAGE_KEY, internalAllowedWebDavEndpoints } from "../../../constant";
 import { getServerSideConfig } from "@/app/config/server";
@@ -160,8 +161,8 @@ async function handle(
   return fetchResult;
 }
 
-export const PUT = handle;
-export const GET = handle;
-export const OPTIONS = handle;
+export const PUT = withExternalAuth(handle);
+export const GET = withExternalAuth(handle);
+export const OPTIONS = withExternalAuth(handle);
 
 export const runtime = "edge";

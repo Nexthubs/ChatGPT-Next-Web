@@ -1,3 +1,4 @@
+import { withExternalAuth } from "@/app/utils/external-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 async function handle(
@@ -66,8 +67,8 @@ async function handle(
   return fetchResult;
 }
 
-export const POST = handle;
-export const GET = handle;
-export const OPTIONS = handle;
+export const POST = withExternalAuth(handle);
+export const GET = withExternalAuth(handle);
+export const OPTIONS = withExternalAuth(handle);
 
 export const runtime = "edge";

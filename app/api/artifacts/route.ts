@@ -1,3 +1,4 @@
+import { withExternalAuth } from "@/app/utils/external-auth";
 import md5 from "spark-md5";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSideConfig } from "@/app/config/server";
@@ -67,7 +68,7 @@ async function handle(req: NextRequest, res: NextResponse) {
   );
 }
 
-export const POST = handle;
-export const GET = handle;
+export const POST = withExternalAuth(handle);
+export const GET = withExternalAuth(handle);
 
 export const runtime = "edge";

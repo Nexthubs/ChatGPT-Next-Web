@@ -1,3 +1,4 @@
+import { withExternalAuth } from "@/app/utils/external-auth";
 import { NextResponse } from "next/server";
 
 import { getServerSideConfig } from "../../config/server";
@@ -25,7 +26,7 @@ async function handle() {
   return NextResponse.json(DANGER_CONFIG);
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = withExternalAuth(handle);
+export const POST = withExternalAuth(handle);
 
 export const runtime = "edge";

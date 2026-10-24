@@ -1,0 +1,26 @@
+chat.nexthubs.cn {
+    route {
+        request_header -X-Auth-User
+        request_header -X-Middleware-Subrequest
+
+        # Preflight has no business side effects. Same-origin app calls need no CORS.
+        @options method OPTIONS
+        handle @options {
+            respond "" 204
+        }
+
+        # Direct probes authenticate themselves in the application's middleware.
+        @auth_endpoint path /api/auth-check /api/auth-check/ /api/auth-gate /api/auth-gate/
+        handle @auth_endpoint {
+            reverse_proxy 100.101.102.108:3010
+        }
+
+        @protected path /api /api/*
+        forward_auth @protected 100.101.102.108:3010 {
+            uri /api/auth-gate
+            copy_headers X-Auth-User
+        }
+
+        reverse_proxy 100.101.102.108:3010
+    }
+}

@@ -1,3 +1,4 @@
+import { withExternalAuth } from "@/app/utils/external-auth";
 import { getServerSideConfig } from "@/app/config/server";
 import { TENCENT_BASE_URL, ModelProvider } from "@/app/constant";
 import { prettyObject } from "@/app/utils/format";
@@ -33,8 +34,8 @@ async function handle(
   }
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = withExternalAuth(handle);
+export const POST = withExternalAuth(handle);
 
 export const runtime = "edge";
 export const preferredRegion = [

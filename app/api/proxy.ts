@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSideConfig } from "@/app/config/server";
+import { ModelProvider, OpenaiPath } from "@/app/constant";
+import { auth } from "./auth";
 
 export async function handle(
   req: NextRequest,
@@ -10,16 +11,56 @@ export async function handle(
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
-  const serverConfig = getServerSideConfig();
-
   // remove path params from searchParams
   req.nextUrl.searchParams.delete("path");
   req.nextUrl.searchParams.delete("provider");
 
   const subpath = params.path.join("/");
-  const fetchUrl = `${req.headers.get(
-    "x-base-url",
-  )}/${subpath}?${req.nextUrl.searchParams.toString()}`;
+  let fetchUrl: URL;
+  try {
+    const base = new URL(req.headers.get("x-base-url") ?? "");
+    const allowedOrigins = new Set([
+      "https://api.openai.com",
+      ...(process.env.PROXY_ALLOWED_ORIGINS ?? "")
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ]);
+    if (
+      base.protocol !== "https:" ||
+      base.username ||
+      base.password ||
+      base.search ||
+      base.hash ||
+      !allowedOrigins.has(base.origin)
+    ) {
+      throw new Error("Untrusted proxy destination");
+    }
+    fetchUrl = new URL(`${base.href.replace(/\/$/, "")}/${subpath}`);
+    fetchUrl.search = req.nextUrl.searchParams.toString();
+    if (fetchUrl.origin !== base.origin) throw new Error("Invalid proxy path");
+  } catch {
+    return NextResponse.json(
+      { error: true, msg: "Proxy destination is not allowed" },
+      { status: 403 },
+    );
+  }
+
+  // Only the exact trusted OpenAI origin may receive the system OpenAI key.
+  if (fetchUrl.origin === "https://api.openai.com") {
+    if (
+      !new Set<string>(Object.values(OpenaiPath)).has(
+        fetchUrl.pathname.slice(1),
+      )
+    ) {
+      return NextResponse.json(
+        { error: true, msg: "Proxy path is not allowed" },
+        { status: 403 },
+      );
+    }
+    const authResult = auth(req, ModelProvider.GPT);
+    if (authResult.error) return NextResponse.json(authResult, { status: 401 });
+  }
   const skipHeaders = ["connection", "host", "origin", "referer", "cookie"];
   const headers = new Headers(
     Array.from(req.headers.entries()).filter((item) => {
@@ -33,18 +74,6 @@ export async function handle(
       return true;
     }),
   );
-  // if dalle3 use openai api key
-    const baseUrl = req.headers.get("x-base-url");
-    if (baseUrl?.includes("api.openai.com")) {
-      if (!serverConfig.apiKey) {
-        return NextResponse.json(
-          { error: "OpenAI API key not configured" },
-          { status: 500 },
-        );
-      }
-      headers.set("Authorization", `Bearer ${serverConfig.apiKey}`);
-    }
-
   const controller = new AbortController();
   const fetchOptions: RequestInit = {
     headers,

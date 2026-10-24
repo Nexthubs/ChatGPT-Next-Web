@@ -1,3 +1,4 @@
+import { withExternalAuth } from "@/app/utils/external-auth";
 import { ApiPath } from "@/app/constant";
 import { NextRequest } from "next/server";
 import { handle as openaiHandler } from "../../openai";
@@ -60,8 +61,8 @@ async function handle(
   }
 }
 
-export const GET = handle;
-export const POST = handle;
+export const GET = withExternalAuth(handle);
+export const POST = withExternalAuth(handle);
 
 export const runtime = "edge";
 export const preferredRegion = [
